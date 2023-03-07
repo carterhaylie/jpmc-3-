@@ -68,9 +68,10 @@ class Graph extends Component<IProps, IState> {
     this.perspectiveElement.setAttribute('data-schema', JSON.stringify(schema));
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps: IProps, prevState: IState) {
     if (this.perspectiveElement && this.state.rows.length > 0) {
-      this.perspectiveElement.load(this.state.rows);
+      const newData = this.state.rows.slice(prevState.rows.length, this.state.rows.length);
+      this.perspectiveElement.load(newData);
     }
   }
 
@@ -103,10 +104,18 @@ class Graph extends Component<IProps, IState> {
         trigger_alert:
           (value.stockPrices['ABC'] / value.stockPrices['DEF']) >= 1.05 ||
           (value.stockPrices['ABC'] / value.stockPrices['DEF']) <= 0.95 ?
-            'crossed' :
-            '',
-      };
+            'crossed
     });
+  };
 
-    this.setState({
-      price: dataFormated[dataFormated.length - 1].stockPrices['AAP
+  render() {
+    return (
+      <div className="Graph">
+        <perspective-viewer id="viewer"></perspective-viewer>
+      </div>
+    );
+  }
+}
+
+export default Graph;
+
