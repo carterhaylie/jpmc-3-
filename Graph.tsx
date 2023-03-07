@@ -21,6 +21,16 @@ interface Table {
   update: (data: any[]) => void,
 }
 
+interface Row {
+  price_abc: number,
+  price_def: number,
+  ratio: number,
+  timestamp: Date,
+  upper_bound: number,
+  lower_bound: number,
+  trigger_alert: string | undefined, // Modified to accept undefined value
+}
+
 class Graph extends Component<IProps, IState> {
   perspectiveElement: PerspectiveViewerElement | null;
 
@@ -94,19 +104,19 @@ class Graph extends Component<IProps, IState> {
     const { data } = this.props;
     const dataFormated = Graph.formatData(data);
 
-    const rows = dataFormated.map((value, index) => {
-      return {
-        ...value.stockPrices,
-        timestamp: value.timestamp,
-        ratio: value.stockPrices['ABC'] / value.stockPrices['DEF'],
-        upper_bound: 1.05,
-        lower_bound: 0.95,
-        trigger_alert:
-          (value.stockPrices['ABC'] / value.stockPrices['DEF']) >= 1.05 ||
-          (value.stockPrices['ABC'] / value.stockPrices['DEF']) <= 0.95 ?
-            'crossed
-    });
+const rows = dataFormated.map((value, index) => {
+  return {
+    ...value.stockPrices,
+    timestamp: value.timestamp,
+    ratio: value.stockPrices['ABC'] / value.stockPrices['DEF'],
+    upper_bound: 1.05,
+    lower_bound: 0.95,
+    trigger_alert:
+      (value.stockPrices['ABC'] / value.stockPrices['DEF']) >= 1.05 ||
+      (value.stockPrices['ABC'] / value.stockPrices['DEF']) <= 0.95 ?
+        'crossed' : '',
   };
+});
 
   render() {
     return (
@@ -118,5 +128,4 @@ class Graph extends Component<IProps, IState> {
 }
 
 export default Graph;
-                                  
-
+                         
