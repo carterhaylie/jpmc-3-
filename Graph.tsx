@@ -100,32 +100,34 @@ class Graph extends Component<IProps, IState> {
     return priceData;
   }
 
-  getDataFromServer = () => {
-    const { data } = this.props;
-    const dataFormated = Graph.formatData(data);
+getDataFromServer = () => {
+  const { data } = this.props;
+  const dataFormated = Graph.formatData(data);
 
-const rows = dataFormated.map((value, index) => {
-  return {
-    ...value.stockPrices,
-    timestamp: value.timestamp,
-    ratio: value.stockPrices['ABC'] / value.stockPrices['DEF'],
-    upper_bound: 1.05,
-    lower_bound: 0.95,
-    trigger_alert:
-      (value.stockPrices['ABC'] / value.stockPrices['DEF']) >= 1.05 ||
-      (value.stockPrices['ABC'] / value.stockPrices['DEF']) <= 0.95 ?
-        'crossed' : '',
-  };
-});
+  const rows = dataFormated.map((value, index) => {
+    const priceABC = (value.stockPrices['ABC'] + value.stockPrices['ABCD']) / 2;
+    const priceDEF = (value.stockPrices['DEF'] + value.stockPrices['DEFG']) / 2;
+    const ratio = priceABC / priceDEF;
 
-  render() {
-    return (
-      <div className="Graph">
-        <perspective-viewer id="viewer"></perspective-viewer>
-      </div>
-    );
-  }
+    const upperBound = 1.1 * (rows.slice(0, index).reduce((acc, row) => acc + row.ratio, 0) / index);
+    const lowerBound = 0.9 * (rows.slice(0, index).reduce((acc, row) => acc + row.ratio, 0) / index);
+
+    return {
+      ...value.stockPrices,
+      timestamp: value.timestamp,
+      price_abc: priceABC,
+      price_def: priceDEF,
+      ratio,
+      upper_bound: upperBound,
+      lower_bound: lowerBound,
+      trigger_alert:
+        ratio >= upperBound || ratio <= lowerBound ? 'crossed' : '',
+    };
+  });
+
+  this.setState({
+    rows,
+  });
 }
 
-export default Graph;
                          
