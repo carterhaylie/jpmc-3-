@@ -39,15 +39,33 @@ class Graph extends Component<IProps, IState> {
   componentDidMount() {
     const elem = document.getElementsByTagName('perspective-viewer')[0];
     this.perspectiveElement = elem as unknown as PerspectiveViewerElement;
+
+    const schema = {
+      stock: 'string',
+      timestamp: 'date',
+      price_abc: 'float',
+      price_def: 'float',
+      ratio: 'float',
+      upper_bound: 'float',
+      lower_bound: 'float',
+      trigger_alert: 'string',
+    };
+
     this.perspectiveElement.setAttribute('view', 'y_line');
     this.perspectiveElement.setAttribute('column-pivots', '["timestamp"]');
     this.perspectiveElement.setAttribute('columns', '["ratio", "lower_bound", "upper_bound", "trigger_alert"]');
     this.perspectiveElement.setAttribute('aggregates', `
-      {"ratio": "custom.sum(price_abc, price_def)", 
-      "lower_bound": "custom.lower_bound(ratio)", 
-      "upper_bound": "custom.upper_bound(ratio)", 
-      "trigger_alert": "custom.trigger_alert(lower_bound, ratio, upper_bound)"}
+      {"stock": "distinct count",
+       "timestamp": "distinct count",
+       "price_abc": "avg",
+       "price_def": "avg",
+       "ratio": "avg",
+       "upper_bound": "avg",
+       "lower_bound": "avg",
+       "trigger_alert": "distinct count"}
     `);
+    this.perspectiveElement.setAttribute('row-pivots', '["stock"]');
+    this.perspectiveElement.setAttribute('data-schema', JSON.stringify(schema));
   }
 
   componentDidUpdate() {
@@ -76,28 +94,19 @@ class Graph extends Component<IProps, IState> {
     const dataFormated = Graph.formatData(data);
 
     const rows = dataFormated.map((value, index) => {
-      const price_abc = value.stockPrices['ABC'];
-      const price_def = value.stockPrices['DEF'];
-      return Object.assign({}, {'index': index, 'price_abc': price_abc, 'price_def': price_def}, value.stockPrices, {'ratio': (price_abc && price_def) ? price_def / price_abc : 0});
+      return {
+        ...value.stockPrices,
+        timestamp: value.timestamp,
+        ratio: value.stockPrices['ABC'] / value.stockPrices['DEF'],
+        upper_bound: 1.05,
+        lower_bound: 0.95,
+        trigger_alert:
+          (value.stockPrices['ABC'] / value.stockPrices['DEF']) >= 1.05 ||
+          (value.stockPrices['ABC'] / value.stockPrices['DEF']) <= 0.95 ?
+            'crossed' :
+            '',
+      };
     });
 
     this.setState({
-      price: dataFormated[dataFormated.length - 1].stockPrices['AAPL'],
-      data: dataFormated,
-      rows: rows,
-    });
-  }
-
-  render() {
-    return (
-      <div className="Graph">
-        <perspective-viewer id="viewer"></perspective-viewer>
-        <div className="price">
-          <h4>AAPL: {this.state.price}</h4>
-        </div>
-      </div>
-    );
-  }
-}
-
-export default Graph;
+      price: dataFormated[dataFormated.length - 1].stockPrices['AAP
